@@ -356,6 +356,33 @@ If specified, this overrides `org-reveal-mathjax2-url' and
           (const remotes)
           (const multiplex)))
 
+(defcustom org-reveal-plugin-to-path
+  '(
+    (RevealHighlight . "%splugin/highlight/highlight.js")
+    (RevealMarkdown . "%splugin/markdown/markdown.js")
+    (RevealSearch . "%splugin/search/search.js")
+    (RevealNotes . "%splugin/notes/notes.js")
+    (RevealMath . "%splugin/math/math.js")
+    (RevealZoom . "%splugin/zoom/zoom.js"))
+  "Alist of RevealJS plugin to the path to load from.
+The path is relative to the reveal.js root directory."
+  :group 'org-export-reveal
+  :type '(alist :key-type symbol :value-type symbol))
+
+(defcustom org-reveal-plugin-to-name
+  nil
+  "Alist of RevealJS plugin to the name of the plugin.
+
+An example of alist entry is
+
+  (highlight . RevealHighlight)
+
+Note that the conversion above is the default conversion, and
+so one only needs to specify the alist entry if the conversion
+is not as simple as above."
+  :group 'org-export-reveal
+  :type '(alist :key-type symbol :value-type string))
+
 (defcustom org-reveal-external-plugins nil
   "Additional third-party Plugins to load with reveal.
 
@@ -1068,6 +1095,7 @@ Reveal.initialize({
                          ;; plugin names into
                          ;; reveal.js 4.0 ones
                          (cond
+                          ((assoc p org-reveal-plugin-to-name) (cdr (assoc p org-reveal-plugin-to-name)))
                           ((eq p 'highlight) 'RevealHighlight)
                           ((eq p 'markdown) 'RevealMarkdown)
                           ((eq p 'search) 'RevealSearch)
@@ -1077,12 +1105,7 @@ Reveal.initialize({
                           (t p)))
                        plugins))
              (available-plugins
-              (append '((RevealHighlight . "%splugin/highlight/highlight.js")
-                        (RevealMarkdown . "%splugin/markdown/markdown.js")
-                        (RevealSearch . "%splugin/search/search.js")
-                        (RevealNotes . "%splugin/notes/notes.js")
-                        (RevealMath . "%splugin/math/math.js")
-                        (RevealZoom . "%splugin/zoom/zoom.js"))
+              (append org-reveal-plugin-to-path
                       org-reveal-external-plugins
                       ;; Buffer local plugins
                       (let ((local-plugins (plist-get info :reveal-external-plugins)))
@@ -1120,6 +1143,7 @@ Reveal.initialize({
           (cons nil nil)))
     ;; No plugins, return empty string
     (cons nil nil)))
+
 (defun org-reveal-toc (depth info)
   "Build a slide of table of contents."
   (let ((toc (org-html-toc depth info)))
