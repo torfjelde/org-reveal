@@ -269,6 +269,10 @@ If specified, this overrides `org-reveal-mathjax2-url' and
   :group 'org-export-reveal
   :type 'string)
 
+(defvar org-reveal-mathjax-config
+  nil
+  "Default MathJax config.")
+
 (defcustom org-reveal-mathjax2-config
   nil
   "Default MathJax v2 config."
@@ -764,7 +768,7 @@ The precedence is as follows:
 1. If `:reveal-mathjax-version' is specified, use it.
 2. If `:reveal-mathjax-url' is specified, try to extract the version
    number from it.
-3. Otherwise, assume MathJax 2. Warn the user about this."
+3. Otherwise, assume MathJax 2."
   (let ((version-string (plist-get info :reveal-mathjax-version)))
     (if version-string
         version-string
@@ -774,9 +778,9 @@ The precedence is as follows:
             (save-match-data
               (if (string-match "\\([0-9]+\\.[0-9]+\\.[0-9]+\\)" url)
                   (match-string 1 mathjax-url)
-                ;; Otherwise, assume MathJax 2. Warn the user about this.
+                ;; Otherwise, assume MathJax 2.
                 org-reveal-mathjax2-version))
-          ;; Otherwise, assume MathJax 2. Warn the user about this.
+          ;; Otherwise, assume MathJax 2.
           org-reveal-mathjax2-version)))))
 
 (defun org-reveal--mathjax-url-from-info (info version)
@@ -785,19 +789,17 @@ The precedence is as follows:
 The precedence is as follows:
 1. If the user has specified a MathJax URL (key `:reveal-mathjax-url' in INFO),
    use that.
-2. Otherwise, if VERSION is ≥3, use the URL specified by `:reveal-mathjax3-url'.
-3. Otherwise, if VERSION is ≥2, use the URL specified by `:reveal-mathjax2-url'."
+2. Otherwise, if VERSION is ≥3, use the URL specified by `org-reveal-mathjax3-url'.
+3. Otherwise, if VERSION is ≥2, use the URL specified by `org-reveal-mathjax2-url'."
   (let ((url (plist-get :reveal-mathjax-url info))
-        (url2 (plist-get :reveal-mathjax2-url info))
-        (url3 (plist-get :reveal-mathjax3-url info))
         (major-version (org-reveal--mathjax-major-version version)))
     (if url
         ;; If the user has specified a MathJax URL, use that.
         url
       ;; Otherwise, we determine the MathJax version from the URL.
       (cond
-       ((eq major-version 3) (org-fill-template (plist-get info :reveal-mathjax3-url) `(("version" . ,version))))
-       ((eq major-version 2) (org-fill-template (plist-get info :reveal-mathjax2-url) `(("version" . ,version))))
+       ((eq major-version 3) (org-fill-template org-reveal-mathjax3-url  `(("version" . ,version))))
+       ((eq major-version 2) (org-fill-template org-reveal-mathjax2-url `(("version" . ,version))))
        (t (error "Unable to resolve URL for MathJax version: %s" version))))))
 
 (defun org-reveal--mathjax2-make-config-script (config)
@@ -816,8 +818,8 @@ The precedence is as follows:
              (mathjax-major-version (org-reveal--mathjax-major-version mathjax-version))
              (mathjax-config (cond
                               ((plist-get info :reveal-mathjax-config) (plist-get info :reveal-mathjax-config))
-                              ((= mathjax-major-version 3) (plist-get info :reveal-mathjax3-config))
-                              ((= mathjax-major-version 2) (plist-get info :reveal-mathjax2-config))
+                              ((= mathjax-major-version 3) org-reveal-mathjax3-config)
+                              ((= mathjax-major-version 2) org-reveal-mathjax2-config)
                               (t (error "Unsupported MathJax version: %s" mathjax-version))))
              (load-script (format "<script type=\"text/javascript\" src=\"%s\"></script>\n"
                                   (org-reveal--mathjax-url-from-info info mathjax-version))))
