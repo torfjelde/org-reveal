@@ -1089,9 +1089,15 @@ Reveal.initialize({
              ;; First value of the pair, a list of script file names
              (let ((root-path (org-reveal-root-path info)))
                (org-reveal--multi-level-mapconcat
-                (lambda (p)
-                  (org-reveal--script-tag-by-file-name (org-reveal--replace-first-%s p root-path)
-                                                       in-single-file))
+                (lambda (p-template)
+                  ;; Get potential file extension from the path.
+                  (let* ((p (org-reveal--replace-first-%s p-template root-path))
+                         (ext (file-name-extension p)))
+                    (cond
+                     ((string= ext "css") (format "<link rel=\"stylesheet\" href=\"%s\" />" p))
+                     ;; Otherwise we assume it's javascript.
+                     (t (org-reveal--script-tag-by-file-name p in-single-file)))
+                    ))
                 plugin-js ""))
              ;; Second value of the tuple, a list of Reveal plugin
              ;; initialization statements
